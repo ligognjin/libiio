@@ -126,6 +126,18 @@ if(WITH_LOCAL_BACKEND)
 	# Link with librt if present
 	find_library(LIBRT_LIBRARIES rt)
 	set(LIBS_TO_LINK ${LIBS_TO_LINK} ${LIBRT_LIBRARIES})
+
+	option(WITH_LOCAL_CONFIG "Read local context attributes from /etc/libiio.ini" OFF)
+	if (WITH_LOCAL_CONFIG)
+		find_library(LIBINI_LIBRARIES ini)
+		find_path(LIBINI_INCLUDE_DIR ini.h)
+		if (NOT LIBINI_LIBRARIES OR NOT LIBINI_INCLUDE_DIR)
+			message(SEND_ERROR "WITH_LOCAL_CONFIG option requires libini to be installed")
+		else()
+			include_directories(${LIBINI_INCLUDE_DIR})
+			set(LIBS_TO_LINK ${LIBS_TO_LINK} ${LIBINI_LIBRARIES})
+		endif()
+	endif()
 endif()
 
 find_library(LIBUSB_LIBRARIES usb-1.0)
