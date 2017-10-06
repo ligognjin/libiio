@@ -1,3 +1,5 @@
+#define CompilerType "@COMPILER@"
+
 [Setup]
 AppId={{D386A5F6-D38D-4738-94A2-E163DC1896F1}
 AppName="Libiio"
@@ -49,8 +51,10 @@ Source: "C:\projects\libiio\build-win64\Release\libiio.dll"; DestDir: "{sys}"; C
 Source: "C:\projects\libiio\build-win32\tests\Release\*.exe"; DestDir: "{sys}"; Check: not Is64BitInstallMode
 Source: "C:\projects\libiio\build-win64\tests\Release\*.exe"; DestDir: "{sys}"; Check: Is64BitInstallMode
 
-Source: "C:\projects\libiio\build-win32\Release\libiio.lib"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib"; Check: not Is64BitInstallMode
-Source: "C:\projects\libiio\build-win64\Release\libiio.lib"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib\amd64"; Check: Is64BitInstallMode
+Source: "C:\projects\libiio\build-win32\Release\libiio.lib"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib"; Check: CompilerMsvcCheck and not Is64BitInstallMode; Flags: skipifsourcedoesntexist
+Source: "C:\projects\libiio\build-win64\Release\libiio.lib"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib\amd64"; Check: CompilerMsvcCheck and Is64BitInstallMode; Flags: skipifsourcedoesntexist
+Source: "C:\projects\libiio\build-win32\Release\libiio.dll.a"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib"; Check: not CompilerMsvcCheck and not Is64BitInstallMode; Flags: skipifsourcedoesntexist
+Source: "C:\projects\libiio\build-win64\Release\libiio.dll.a"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib\amd64"; Check: not CompilerMsvcCheck and Is64BitInstallMode; Flags: skipifsourcedoesntexist
 Source: "C:\projects\libiio\iio.h"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\include"
 
 Source: "C:\libs\32\libxml2.dll"; DestDir: "{sys}"; Flags: onlyifdoesntexist 32bit
@@ -62,7 +66,20 @@ Source: "C:\libs\64\libusb-1.0.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode
 Source: "C:\libs\32\libserialport-0.dll"; DestDir: "{sys}"; Flags: onlyifdoesntexist 32bit
 Source: "C:\libs\64\libserialport-0.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
 
-Source: "C:\projects\libiio\build-win32\bindings\csharp\libiio-sharp.dll"; DestDir: "{cf}\libiio"
+Source: "C:\projects\libiio\build-win32\bindings\csharp\libiio-sharp.dll"; DestDir: "{cf}\libiio"; Check: CompilerMsvcCheck; Flags: skipifsourcedoesntexist
 
-Source: "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll"; DestDir: "{sys}"; Flags: onlyifdoesntexist 32bit
-Source: "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x64\Microsoft.VC120.CRT\msvcr120.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll"; DestDir: "{sys}"; Check: CompilerMsvcCheck; Flags: onlyifdoesntexist 32bit
+Source: "C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x64\Microsoft.VC120.CRT\msvcr120.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode and CompilerMsvcCheck; Flags: onlyifdoesntexist
+
+[Code]
+function CompilerMsvcCheck(): Boolean;
+var
+  ResultCode: Boolean;
+begin
+  if ExpandConstant('{#CompilerType}')<>'msvc' then begin
+    ResultCode := False;
+  end else begin
+    ResultCode := True;
+  end;
+    Result:= ResultCode;
+end;
