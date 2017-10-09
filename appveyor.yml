@@ -74,8 +74,8 @@ build_script:
     - if "%COMPILER%"=="mingw" (mkdir build-win32\tests\ build-win32\tests\"%configuration%"& copy build-win32\Release\tests\*.exe build-win32\tests\"%configuration%"\)
     - if "%COMPILER%"=="mingw" (mkdir build-win64\tests\ build-win64\tests\"%configuration%"& copy build-win64\Release\tests\*.exe build-win64\tests\"%configuration%"\)
 
-    - ISCC %folder-path%\libiio.iss
-    - appveyor PushArtifact C:\libiio-setup.exe
+    - if "%COMPILER%"=="msvc" (ISCC %folder-path%\libiio.iss)
+    - if "%COMPILER%"=="msvc" (appveyor PushArtifact C:\libiio-setup.exe)
 
 
     # Create ZIP packages
@@ -94,15 +94,7 @@ build_script:
     - if "%COMPILER%"=="msvc" (copy c:\libs\32\libserialport-0.dll c:\libiio-win32\)
     
     #Copy dependencies for MinGW
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\lib\libxml2.dll.a c:\libiio-win32\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\lib\libusb-1.0.dll.a c:\libiio-win32\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\lib\liblzma.dll.a c:\libiio-win32\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\lib\libiconv.dll.a c:\libiio-win32\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\bin\libxml2-2.dll c:\libiio-win32\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\bin\libusb-1.0.dll c:\libiio-win32\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\bin\liblzma-5.dll c:\libiio-win32\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\bin\libiconv-2.dll c:\libiio-win32\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw32\bin\zlib1.dll c:\libiio-win32\)
+    - if "%COMPILER%"=="mingw" (C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw32/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libiconv-*.dll zlib*.dll libxml2-*.dll liblzma-*.dll libzip-*.dll libusb-*.dll /c/libiio-win32/")
     
     - if "%COMPILER%"=="msvc" (copy "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll" c:\libiio-win32\)
     - xcopy /S bindings\matlab c:\libiio-win32\matlab\
@@ -124,15 +116,7 @@ build_script:
     - if "%COMPILER%"=="msvc" (copy c:\libs\64\libusb-1.0.dll c:\libiio-win64\)
     - if "%COMPILER%"=="msvc" (copy c:\libs\64\libserialport-0.dll c:\libiio-win64\)
     #Copy dependencies for MinGW
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\lib\libxml2.dll.a c:\libiio-win64\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\lib\libusb-1.0.dll.a c:\libiio-win64\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\lib\liblzma.dll.a c:\libiio-win64\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\lib\libiconv.dll.a c:\libiio-win64\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\bin\libxml2-2.dll c:\libiio-win64\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\bin\libusb-1.0.dll c:\libiio-win64\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\bin\liblzma-5.dll c:\libiio-win64\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\bin\libiconv-2.dll c:\libiio-win64\)
-    - if "%COMPILER%"=="mingw" (copy c:\msys64\mingw64\bin\zlib1.dll c:\libiio-win64\)
+    - if "%COMPILER%"=="mingw" (C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw64/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libiconv-*.dll zlib*.dll libxml2-*.dll liblzma-*.dll libzip-*.dll libusb-*.dll /c/libiio-win64/")
     
     - if "%COMPILER%"=="msvc" (copy "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x64\Microsoft.VC120.CRT\msvcr120.dll" c:\libiio-win64\)
     - xcopy /S bindings\matlab c:\libiio-win64\matlab\
