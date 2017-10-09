@@ -48,11 +48,14 @@ build_script:
     - if "%COMPILER%"=="mingw" (C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy  mingw-w64-i686-gcc mingw-w64-i686-libusb mingw-w64-i686-cmake mingw-w64-i686-libxml2 mingw-w64-i686-pkg-config mingw-w64-i686-libzip mingw-w64-i686-doxygen")
     - if "%COMPILER%"=="mingw" (C:\msys64\usr\bin\bash -lc "cmake -G '%GENERATOR%' -DCMAKE_BUILD_TYPE=%configuration% -DCMAKE_INSTALL_PREFIX=/mingw32 -DCMAKE_C_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-gcc.exe -DCMAKE_CXX_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-g++.exe -DCSHARP_BINDINGS:BOOL=OFF -DPKG_CONFIG_EXECUTABLE:FILEPATH=/mingw32/bin/pkg-config.exe -DENABLE_IPV6:BOOL=OFF -DPYTHON_BINDINGS:BOOL=OFF -DLIBSERIALPORT_LIBRARIES=c/libs/32/libserialport.dll.a /c/projects/libiio && make -j3")
 
+    # set LIBIIO_VERSION to current project version determined by cmake
+    - if "%COMPILER%"=="mingw" (ps: Set-AppveyorBuildVariable -Name LIBIIO_VERSION -Value (get-content .version))
+
     #MSVC 32 bit
     - if "%COMPILER%"=="msvc" (set MCS_EXECUTABLE_PATH="C:\Windows\Microsoft.NET\Framework\v4.0.30319")
     - if "%COMPILER%"=="msvc" (cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE:STRING="%configuration%" -DENABLE_IPV6:BOOL=OFF -DCMAKE_SYSTEM_PREFIX_PATH="C:" -DPYTHON_BINDINGS:BOOL=OFF -DLIBXML2_LIBRARIES="C:\\libs\\32\\libxml2.lib" -DLIBUSB_LIBRARIES="C:\\libs\\32\\libusb-1.0.lib" -DLIBSERIALPORT_LIBRARIES="C:\\libs\\32\\libserialport.dll.a" ..)
     - if "%COMPILER%"=="msvc" (cmake --build . --config %configuration%)
-
+    
     - cd c:\projects\libiio
     - echo "Running cmake for 64 bit... "
     - mkdir build-win64
@@ -79,47 +82,51 @@ build_script:
 
 
     # Create ZIP packages
+    - if "%COMPILER%"=="msvc" (set ARCHIVE_NAME=libiio-win32)
+    - if "%COMPILER%"=="mingw" (set ARCHIVE_NAME=libiio-%LIBIIO_VERSION%-MinGW-win32)
     - cd c:\projects\libiio
-    - mkdir c:\libiio-win32
-    - copy iio.h c:\libiio-win32
-    - copy build-win32\Release\libiio.* c:\libiio-win32\
+    - mkdir c:\%ARCHIVE_NAME%
+    - copy iio.h c:\%ARCHIVE_NAME%
+    - copy build-win32\Release\libiio.* c:\%ARCHIVE_NAME%\
     # Remove the iss and pc files
-    - if "%COMPILER%"=="mingw" (del c:\libiio-win32\libiio.iss)
-    - if "%COMPILER%"=="mingw" (del c:\libiio-win32\libiio.pc)
-    - copy build-win32\tests\Release\*.exe c:\libiio-win32\
+    - if "%COMPILER%"=="mingw" (del c:\%ARCHIVE_NAME%\libiio.iss)
+    - if "%COMPILER%"=="mingw" (del c:\%ARCHIVE_NAME%\libiio.pc)
+    - copy build-win32\tests\Release\*.exe c:\%ARCHIVE_NAME%\
     
     #Copy dependencies for MSVC
-    - if "%COMPILER%"=="msvc" (copy c:\libs\32\libxml2.dll c:\libiio-win32\)
-    - if "%COMPILER%"=="msvc" (copy c:\libs\32\libusb-1.0.dll c:\libiio-win32\)
-    - if "%COMPILER%"=="msvc" (copy c:\libs\32\libserialport-0.dll c:\libiio-win32\)
+    - if "%COMPILER%"=="msvc" (copy c:\libs\32\libxml2.dll c:\%ARCHIVE_NAME%\)
+    - if "%COMPILER%"=="msvc" (copy c:\libs\32\libusb-1.0.dll c:\%ARCHIVE_NAME%\)
+    - if "%COMPILER%"=="msvc" (copy c:\libs\32\libserialport-0.dll c:\%ARCHIVE_NAME%\)
     
     #Copy dependencies for MinGW
-    - if "%COMPILER%"=="mingw" (C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw32/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libiconv-*.dll zlib*.dll libxml2-*.dll liblzma-*.dll libzip-*.dll libusb-*.dll /c/libiio-win32/")
+    - if "%COMPILER%"=="mingw" (C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw32/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libiconv-*.dll zlib*.dll libxml2-*.dll liblzma-*.dll libzip-*.dll libusb-*.dll /c/%ARCHIVE_NAME%/")
     
-    - if "%COMPILER%"=="msvc" (copy "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll" c:\libiio-win32\)
-    - xcopy /S bindings\matlab c:\libiio-win32\matlab\
-    - del c:\libiio-win32\matlab\CMakeLists.txt
-    - 7z a "c:\libiio-win32.zip" c:\libiio-win32
-    - appveyor PushArtifact c:\libiio-win32.zip
+    - if "%COMPILER%"=="msvc" (copy "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x86\Microsoft.VC120.CRT\msvcr120.dll" c:\%ARCHIVE_NAME%\)
+    - xcopy /S bindings\matlab c:\%ARCHIVE_NAME%\matlab\
+    - del c:\%ARCHIVE_NAME%\matlab\CMakeLists.txt
+    - 7z a "c:\%ARCHIVE_NAME%.zip" c:\%ARCHIVE_NAME%
+    - appveyor PushArtifact c:\%ARCHIVE_NAME%.zip
 
+    - if "%COMPILER%"=="msvc" (set ARCHIVE_NAME=libiio-win64)
+    - if "%COMPILER%"=="mingw" (set ARCHIVE_NAME=libiio-%LIBIIO_VERSION%-MinGW-win64)
     - cd c:\projects\libiio
-    - mkdir c:\libiio-win64
-    - copy iio.h c:\libiio-win64\
-    - copy build-win64\Release\libiio.* c:\libiio-win64\
+    - mkdir c:\%ARCHIVE_NAME%
+    - copy iio.h c:\%ARCHIVE_NAME%\
+    - copy build-win64\Release\libiio.* c:\%ARCHIVE_NAME%\
     # Remove the iss and pc files
-    - if "%COMPILER%"=="mingw" (del c:\libiio-win64\libiio.iss)
-    - if "%COMPILER%"=="mingw" (del c:\libiio-win64\libiio.pc)
-    - copy build-win64\tests\Release\*.exe c:\libiio-win64\
+    - if "%COMPILER%"=="mingw" (del c:\%ARCHIVE_NAME%\libiio.iss)
+    - if "%COMPILER%"=="mingw" (del c:\%ARCHIVE_NAME%\libiio.pc)
+    - copy build-win64\tests\Release\*.exe c:\%ARCHIVE_NAME%\
 
     #Copy dependencies for MSVC
-    - if "%COMPILER%"=="msvc" (copy c:\libs\64\libxml2.dll c:\libiio-win64\)
-    - if "%COMPILER%"=="msvc" (copy c:\libs\64\libusb-1.0.dll c:\libiio-win64\)
-    - if "%COMPILER%"=="msvc" (copy c:\libs\64\libserialport-0.dll c:\libiio-win64\)
+    - if "%COMPILER%"=="msvc" (copy c:\libs\64\libxml2.dll c:\%ARCHIVE_NAME%\)
+    - if "%COMPILER%"=="msvc" (copy c:\libs\64\libusb-1.0.dll c:\%ARCHIVE_NAME%\)
+    - if "%COMPILER%"=="msvc" (copy c:\libs\64\libserialport-0.dll c:\%ARCHIVE_NAME%\)
     #Copy dependencies for MinGW
-    - if "%COMPILER%"=="mingw" (C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw64/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libiconv-*.dll zlib*.dll libxml2-*.dll liblzma-*.dll libzip-*.dll libusb-*.dll /c/libiio-win64/")
+    - if "%COMPILER%"=="mingw" (C:\msys64\usr\bin\bash -lc "cd c:/msys64/mingw64/bin ; cp -r libwinpthread-*.dll libgcc_*.dll libstdc++-*.dll libiconv-*.dll zlib*.dll libxml2-*.dll liblzma-*.dll libzip-*.dll libusb-*.dll /c/%ARCHIVE_NAME%/")
     
-    - if "%COMPILER%"=="msvc" (copy "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x64\Microsoft.VC120.CRT\msvcr120.dll" c:\libiio-win64\)
-    - xcopy /S bindings\matlab c:\libiio-win64\matlab\
-    - del c:\libiio-win64\matlab\CMakeLists.txt
-    - 7z a "c:\libiio-win64.zip" c:\libiio-win64
-    - appveyor PushArtifact c:\libiio-win64.zip
+    - if "%COMPILER%"=="msvc" (copy "c:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\redist\x64\Microsoft.VC120.CRT\msvcr120.dll" c:\%ARCHIVE_NAME%\)
+    - xcopy /S bindings\matlab c:\%ARCHIVE_NAME%\matlab\
+    - del c:\%ARCHIVE_NAME%\matlab\CMakeLists.txt
+    - 7z a "c:\%ARCHIVE_NAME%.zip" c:\%ARCHIVE_NAME%
+    - appveyor PushArtifact c:\%ARCHIVE_NAME%.zip
